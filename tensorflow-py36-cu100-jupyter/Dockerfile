@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------
 # python        3.6    (apt)
 # jupyter       latest (pip)
-# pytorch       latest (pip)
+# tensorflow    latest (pip)
 # jupyterlab    latest (pip)
 # ==================================================================
 
@@ -82,23 +82,11 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
         && \
 
 # ==================================================================
-# pytorch
+# tensorflow
 # ------------------------------------------------------------------
 
     $PIP_INSTALL \
-        future \
-        numpy \
-        protobuf \
-        enum34 \
-        pyyaml \
-        typing \
-    	torch \
-        && \
-    $PIP_INSTALL \
-    "git+https://github.com/pytorch/vision.git" && \
-    $PIP_INSTALL \
-        torch_nightly -f \
-        https://download.pytorch.org/whl/nightly/cu100/torch_nightly.html \
+        tf-nightly-gpu-2.0-preview \
         && \
 
 # ==================================================================
@@ -118,4 +106,4 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
     apt-get autoremove && \
     rm -rf /var/lib/apt/lists/* /tmp/* ~/*
 
-EXPOSE 8888
+EXPOSE 8888 6006
