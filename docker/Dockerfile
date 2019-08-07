@@ -2,9 +2,9 @@
 # module list
 # ------------------------------------------------------------------
 # python        3.6    (apt)
-# jupyter       latest (pip)
 # pytorch       latest (pip)
-# jupyterlab    latest (pip)
+# theano        latest (git)
+# lasagne       latest (git)
 # ==================================================================
 
 FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
@@ -74,14 +74,6 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
         && \
 
 # ==================================================================
-# jupyter
-# ------------------------------------------------------------------
-
-    $PIP_INSTALL \
-        jupyter \
-        && \
-
-# ==================================================================
 # pytorch
 # ------------------------------------------------------------------
 
@@ -102,12 +94,37 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
         && \
 
 # ==================================================================
-# jupyterlab
+# theano
 # ------------------------------------------------------------------
 
-    $PIP_INSTALL \
-        jupyterlab \
+    DEBIAN_FRONTEND=noninteractive $APT_INSTALL \
+        libblas-dev \
         && \
+
+    wget -qO- https://github.com/Theano/libgpuarray/archive/v0.7.6.tar.gz | tar xz -C ~ && \
+    cd ~/libgpuarray* && mkdir -p build && cd build && \
+    cmake -D CMAKE_BUILD_TYPE=RELEASE \
+          -D CMAKE_INSTALL_PREFIX=/usr/local \
+          .. && \
+    make -j"$(nproc)" install && \
+    cd ~/libgpuarray* && \
+    python setup.py build && \
+    python setup.py install && \
+
+    printf '[global]\nfloatX = float32\ndevice = cuda0\n\n[dnn]\ninclude_path = /usr/local/cuda/targets/x86_64-linux/include\n' > ~/.theanorc && \
+
+    $PIP_INSTALL \
+        https://github.com/Theano/Theano/archive/master.zip \
+        && \
+
+# ==================================================================
+# lasagne
+# ------------------------------------------------------------------
+
+    $GIT_CLONE https://github.com/Lasagne/Lasagne ~/lasagne && \
+    cd ~/lasagne && \
+    $PIP_INSTALL \
+        . && \
 
 # ==================================================================
 # config & cleanup
@@ -117,5 +134,3 @@ RUN APT_INSTALL="apt-get install -y --no-install-recommends" && \
     apt-get clean && \
     apt-get autoremove && \
     rm -rf /var/lib/apt/lists/* /tmp/* ~/*
-
-EXPOSE 8888
